@@ -1,9 +1,6 @@
 ﻿using System;
 using Microsoft.SqlServer.Management.Smo;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SqlTool
 {
@@ -153,6 +150,24 @@ namespace SqlTool
                 return "";
             }
             return column.DefaultConstraint.Text;
+        }
+
+        public static List<ForeignKey> GetForeignKeys(
+            Database database
+        )
+        {
+            var returnList = new List<ForeignKey>();
+            foreach (Table table in database.Tables)
+            {
+                if (!table.IsSystemObject)
+                {
+                    foreach (ForeignKey foreignKey in table.ForeignKeys)
+                    {
+                        returnList.Add(foreignKey);
+                    }
+                }
+            }
+            return returnList;
         }
     }
 }

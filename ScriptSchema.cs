@@ -53,17 +53,21 @@ namespace SqlTool
             Directory.CreateDirectory(directoryName);
 
             var database = SqlSchema.GetDatabase(serverName, databaseName);
+            var options = GetScriptingOptions();
 
-            ScriptObjectType(directoryName, "Tables", database.Tables);
-            ScriptObjectType(directoryName, "Views", database.Views);
-            ScriptObjectType(directoryName, "StoredProcedures", database.StoredProcedures);
-            ScriptObjectType(directoryName, "Functions", database.UserDefinedFunctions);
+            ScriptObjectType(directoryName, "Tables", database.Tables, options);
+            ScriptObjectType(directoryName, "ForeignKeys", database.Tables, GetScriptingOptionsForeignKey());
+            ScriptObjectType(directoryName, "Views", database.Views, options);
+            ScriptObjectType(directoryName, "StoredProcedures", database.StoredProcedures, options);
+            ScriptObjectType(directoryName, "Functions", database.UserDefinedFunctions, options);
+            
         }
             
         public static void ScriptObjectType<T>(
             string parentDirectoryName,
             string objectDirectoryName,
-            T itemCollection
+            T itemCollection,
+            ScriptingOptions options
         ) where T: SchemaCollectionBase
         {
             if (itemCollection.Count == 0)
@@ -79,28 +83,49 @@ namespace SqlTool
                 {
                     string scriptName = smoItem.Schema + "." + smoItem.Name + ".sql";
                     string filePath = Path.Combine(objectTypeDirectory, scriptName);
-                    ScriptObject(item, filePath);
+                    ScriptObject(item, filePath, options);
                 }
             }
         }
 
-        private static string ScriptObject<T>(T item, string fileName) where T: IScriptable
+        private static void ScriptObject<T>(T item, string fileName, ScriptingOptions options) where T: IScriptable
         {
-            var options = new ScriptingOptions();
-            options.DriAll = true;
-            options.ExtendedProperties = true;
-            options.FileName = fileName;
-            options.NoFileGroup = true;
-            options.ScriptBatchTerminator = true;
-            options.ToFileOnly = true;
-            options.Triggers = true;
+            // Instead of ToFileOnly option, check if string has any contents before writing file - Foreign Key script could be easy
             var scriptCollection = item.Script(options);
             var returnSQL = new StringBuilder();
             foreach (var scriptItem in scriptCollection)
             {
                 returnSQL.AppendLine(scriptItem);
             }
-            return returnSQL.ToString();
+            string scriptContents = returnSQL.ToString().Trim();
+            if (scriptContents.Length > 0)
+            {
+                File.WriteAllText(fileName, scriptContents);
+            }
+        }
+
+        private static ScriptingOptions GetScriptingOptions()
+        {
+            var options = new ScriptingOptions();
+            options.DriAll = true;
+            options.DriForeignKeys = false;
+            options.ExtendedProperties = true;
+            options.NoFileGroup = true;
+            options.ScriptBatchTerminator = true;
+            options.ToFileOnly = false;
+            options.Triggers = true;
+            return options;
+        }
+
+        private static ScriptingOptions GetScriptingOptionsForeignKey()
+        {
+            var options = new ScriptingOptions();
+            options.DriForeignKeys = true;
+            options.NoFileGroup = true;
+            options.PrimaryObject = false;
+            options.ScriptBatchTerminator = true;
+            options.ToFileOnly = false;
+            return options;
         }
     }
 }
