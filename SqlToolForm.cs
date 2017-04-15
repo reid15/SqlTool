@@ -63,8 +63,10 @@ namespace SqlTool
                         if (exportDirectory.Length > 0)
                         {
                             txtResults.Text = "Exporting...";
+                            Cursor.Current = Cursors.WaitCursor;
                             Application.DoEvents();
                             ScriptSchema.ScriptDatabase(txtServer.Text, txtDatabase.Text, exportDirectory);
+                            Cursor.Current = Cursors.Default;
                             MessageBox.Show("Export Completed");
                             txtResults.Text = "";
                         }

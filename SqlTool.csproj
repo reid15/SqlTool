@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeGeneration.cs" />
+    <Compile Include="Common.cs" />
     <Compile Include="DataDictionary.cs" />
     <Compile Include="DataObjects.cs" />
     <Compile Include="SqlToolForm.cs">

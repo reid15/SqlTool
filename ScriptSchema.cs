@@ -1,10 +1,8 @@
 ﻿using Microsoft.SqlServer.Management.Smo;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SqlTool
 {
@@ -55,53 +53,62 @@ namespace SqlTool
             var database = SqlSchema.GetDatabase(serverName, databaseName);
             var options = GetScriptingOptions();
 
-            ScriptObjectType(directoryName, "Tables", database.Tables, options);
-            ScriptObjectType(directoryName, "ForeignKeys", database.Tables, GetScriptingOptionsForeignKey());
-            ScriptObjectType(directoryName, "Views", database.Views, options);
-            ScriptObjectType(directoryName, "StoredProcedures", database.StoredProcedures, options);
-            ScriptObjectType(directoryName, "Functions", database.UserDefinedFunctions, options);
-            
+            ScriptObjectType(directoryName, "Schemas", database.Schemas.Cast<Schema>().ToList(), options);
+            ScriptObjectType(directoryName, "Tables", database.Tables.Cast<Table>().ToList(), options);
+            ScriptObjectType(directoryName, "ForeignKeysTriggers", GetTablesWithForeignKeysOrTriggers(database), GetScriptingOptionsForeignKeyTrigger());
+            ScriptObjectType(directoryName, "Views", database.Views.Cast<View>().ToList(), options);
+            ScriptObjectType(directoryName, "StoredProcedures", database.StoredProcedures.Cast<StoredProcedure>().ToList(), options);
+            ScriptObjectType(directoryName, "Functions", database.UserDefinedFunctions.Cast<UserDefinedFunction>().ToList(), options);
+            ScriptObjectType(directoryName, "Sequences", database.Sequences.Cast<Sequence>().ToList(), options);
+            ScriptObjectType(directoryName, "UserDefinedTableTypes", database.UserDefinedTableTypes.Cast<UserDefinedTableType>().ToList(), options);
+
+            ScriptReferenceData(database, directoryName, "ReferenceData");
         }
             
         public static void ScriptObjectType<T>(
             string parentDirectoryName,
             string objectDirectoryName,
-            T itemCollection,
+            List<T> itemCollection,
             ScriptingOptions options
-        ) where T: SchemaCollectionBase
+        ) where T: ScriptNameObjectBase 
         {
             if (itemCollection.Count == 0)
             {
                 return;
             }
-            string objectTypeDirectory = Path.Combine(parentDirectoryName, objectDirectoryName);
-            Directory.CreateDirectory(objectTypeDirectory);
-            foreach(IScriptable item in itemCollection) 
+            string objectTypeDirectory = string.Empty;
+            foreach (IScriptable item in itemCollection)
             {
-                var smoItem = (ScriptSchemaObjectBase)item;
-                if (!(bool)smoItem.Properties["IsSystemObject"].Value)
+                var smoItem = (ScriptNameObjectBase)item;
+                //if (!(bool)smoItem.Properties["IsSystemObject"].Value)
+                if (!IsSystemObject(smoItem))
                 {
-                    string scriptName = smoItem.Schema + "." + smoItem.Name + ".sql";
+                    if (objectTypeDirectory == string.Empty)
+                    {
+                        objectTypeDirectory = Common.CreateDirectory(parentDirectoryName, objectDirectoryName);
+                    }
+                    
+                    string scriptName = smoItem.Name + ".sql";
+                    if (smoItem.GetType().Name != "Schema")
+                    {
+                        var schemaObject = (ScriptSchemaObjectBase)smoItem;
+                        scriptName = schemaObject.Schema + "." + scriptName;
+                    }
+                    
                     string filePath = Path.Combine(objectTypeDirectory, scriptName);
-                    ScriptObject(item, filePath, options);
+                    options.FileName = filePath;
+                    item.Script(options);
                 }
             }
         }
 
-        private static void ScriptObject<T>(T item, string fileName, ScriptingOptions options) where T: IScriptable
+        private static bool IsSystemObject(ScriptNameObjectBase smoItem)
         {
-            // Instead of ToFileOnly option, check if string has any contents before writing file - Foreign Key script could be easy
-            var scriptCollection = item.Script(options);
-            var returnSQL = new StringBuilder();
-            foreach (var scriptItem in scriptCollection)
+            if (!smoItem.Properties.Contains("IsSystemObject"))
             {
-                returnSQL.AppendLine(scriptItem);
+                return false;
             }
-            string scriptContents = returnSQL.ToString().Trim();
-            if (scriptContents.Length > 0)
-            {
-                File.WriteAllText(fileName, scriptContents);
-            }
+            return (bool)smoItem.Properties["IsSystemObject"].Value;
         }
 
         private static ScriptingOptions GetScriptingOptions()
@@ -112,20 +119,67 @@ namespace SqlTool
             options.ExtendedProperties = true;
             options.NoFileGroup = true;
             options.ScriptBatchTerminator = true;
-            options.ToFileOnly = false;
-            options.Triggers = true;
+            options.ToFileOnly = true;
+            options.Triggers = false;
             return options;
         }
 
-        private static ScriptingOptions GetScriptingOptionsForeignKey()
+        private static ScriptingOptions GetScriptingOptionsForeignKeyTrigger()
         {
             var options = new ScriptingOptions();
             options.DriForeignKeys = true;
             options.NoFileGroup = true;
             options.PrimaryObject = false;
             options.ScriptBatchTerminator = true;
-            options.ToFileOnly = false;
+            options.ToFileOnly = true;
+            options.Triggers = true;
             return options;
+        }
+
+        private static ScriptingOptions GetScriptingOptionsData()
+        {
+            var options = new ScriptingOptions();
+            options.ScriptSchema = false;
+            options.ScriptData = true;
+            options.ScriptDrops = false;
+            options.ToFileOnly = true;
+            return options;
+        }
+
+        private static List<Table> GetTablesWithForeignKeysOrTriggers(Database database)
+        {
+            List<Table> returnList = new List<Table>();
+            foreach (Table table in database.Tables)
+            {
+                if (!table.IsSystemObject && (table.ForeignKeys.Count > 0 || table.Triggers.Count > 0))
+                {
+                    returnList.Add(table);
+                }
+            }
+            return returnList;
+        }
+
+        private static void ScriptReferenceData(Database database, string parentDirectoryName, string objectDirectoryName)
+        {
+            string objectTypeDirectory = string.Empty;
+            var options = GetScriptingOptionsData();
+            options.ToFileOnly = true;
+
+            foreach (Table table in database.Tables)
+            {
+                if (!table.IsSystemObject && table.ExtendedProperties["HasReferenceData"] != null &&
+                    table.ExtendedProperties["HasReferenceData"].Value.ToString() == "true")
+                {
+                    if (objectTypeDirectory == string.Empty)
+                    {
+                        objectTypeDirectory = Common.CreateDirectory(parentDirectoryName, objectDirectoryName);
+                    }
+                    string scriptName = table.Schema + "." + table.Name + ".sql";
+                    string filePath = Path.Combine(objectTypeDirectory, scriptName);
+                    options.FileName = filePath;
+                    table.EnumScript(options);
+                }
+            }
         }
     }
 }
