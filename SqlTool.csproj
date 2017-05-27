@@ -55,6 +55,7 @@
     <Compile Include="Common.cs" />
     <Compile Include="DataDictionary.cs" />
     <Compile Include="DataObjects.cs" />
+    <Compile Include="GenerateDataLayer.cs" />
     <Compile Include="SqlToolForm.cs">
       <SubType>Form</SubType>
     </Compile>

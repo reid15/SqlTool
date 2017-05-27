@@ -21,13 +21,33 @@ namespace SqlTool
 
             txtServer.Text = ConfigurationManager.AppSettings["defaultServer"];
             txtDatabase.Text = ConfigurationManager.AppSettings["defaultDatabase"];
+
+            SetTableDataSource(txtServer.Text, txtDatabase.Text);
         }
         
         private void txtDatabase_Leave(object sender, EventArgs e)
         {
             if (cboTable.Enabled)
             {
-                cboTable.DataSource = SqlSchema.GetTableList(txtServer.Text, txtDatabase.Text);
+                SetTableDataSource(txtServer.Text, txtDatabase.Text);
+            }
+        }
+
+        private void SetTableDataSource(
+            string serverName,
+            string tableName
+        )
+        {
+            try
+            {
+                if (serverName.Length > 0 && tableName.Length > 0)
+                {
+                    cboTable.DataSource = SqlSchema.GetTableList(txtServer.Text, txtDatabase.Text);
+                }
+            }
+            catch (Exception exception)
+            {
+                ExceptionHandler(exception);
             }
         }
 
@@ -35,6 +55,8 @@ namespace SqlTool
         {
             try
             {
+                ValidateInput();
+
                 var jobSelection = (JobTypeEntry)cboJobType.SelectedValue;
                 var tableInfo = (TableInfo)cboTable.SelectedValue;
 
@@ -70,6 +92,10 @@ namespace SqlTool
                             MessageBox.Show("Export Completed");
                             txtResults.Text = "";
                         }
+                        break;
+                    case JobTypeEnum.DataLayer:
+                        var generateDataLayer = new GenerateDataLayer();
+                        txtResults.Text = generateDataLayer.GetDataLayer(txtServer.Text, txtDatabase.Text, tableInfo.SchemaName, tableInfo.TableName);
                         break;
                     default:
                         break;
@@ -107,7 +133,7 @@ namespace SqlTool
             Exception exception
         )
         {
-            string exceptionText = exception.Message;
+            string exceptionText = exception.Message + Environment.NewLine + exception.StackTrace;
             string caption = "Exception";
             MessageBoxButtons button = MessageBoxButtons.OK;
             MessageBox.Show(exceptionText, caption, button);
@@ -121,6 +147,27 @@ namespace SqlTool
                 return fbd.SelectedPath;
             }
             return "";
+        }
+
+        private void ValidateInput()
+        {
+            if (txtServer.Text == string.Empty)
+            {
+                throw new ApplicationException("Server not specified");
+            }
+            if (txtDatabase.Text == string.Empty)
+            {
+                throw new ApplicationException("Database not specified");
+            }
+            if (cboTable.Enabled && cboTable.SelectedIndex == -1)
+            {
+                throw new ApplicationException("Table not specified");
+            }
+        }
+
+        private void btnCopy_Click(object sender, EventArgs e)
+        {
+            Clipboard.SetText(txtResults.Text);
         }
     }
 }

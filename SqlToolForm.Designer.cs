@@ -41,6 +41,7 @@
             this.btnSave = new System.Windows.Forms.Button();
             this.txtWhere = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.btnCopy = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // txtServer
@@ -161,11 +162,23 @@
             this.label5.TabIndex = 12;
             this.label5.Text = "Where";
             // 
+            // btnCopy
+            // 
+            this.btnCopy.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnCopy.Location = new System.Drawing.Point(115, 517);
+            this.btnCopy.Name = "btnCopy";
+            this.btnCopy.Size = new System.Drawing.Size(75, 23);
+            this.btnCopy.TabIndex = 13;
+            this.btnCopy.Text = "Copy";
+            this.btnCopy.UseVisualStyleBackColor = true;
+            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
+            // 
             // SqlToolForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(546, 542);
+            this.Controls.Add(this.btnCopy);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.txtWhere);
             this.Controls.Add(this.btnSave);
@@ -201,6 +214,7 @@
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.TextBox txtWhere;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Button btnCopy;
     }
 }
 

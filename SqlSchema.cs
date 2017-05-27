@@ -90,6 +90,20 @@ namespace SqlTool
             return false;
         }
 
+        public static Column GetIdentityColumn(
+            Table table
+        )
+        {
+            foreach (Column column in table.Columns)
+            {
+                if (column.Identity)
+                {
+                    return column;
+                }
+            }
+            return new Column();
+        }
+
         public static string GetColumnListString(
             Table table,
             bool includeIdentityColumn

@@ -36,10 +36,11 @@ namespace SqlTool
             string procName = table.Schema + ".Get" + table.Name;
             returnSql.AppendLine(GetDropObjectSQL(procName, "procedure"));
             returnSql.AppendLine("create procedure " + procName + "(");
-            returnSql.AppendLine(GetPrimaryKeyInputParameters(table));
+            returnSql.AppendLine(GetSelectProcParameters(table));
             returnSql.AppendLine(")");
             returnSql.AppendLine("as");
-            returnSql.AppendLine("select " + SqlSchema.GetColumnListString(table, true));
+            returnSql.AppendLine("select");
+            returnSql.AppendLine(GetNonPrimaryKeyOuputParameters(table));
             returnSql.AppendLine("from " + table.Schema + "." + table.Name);
             returnSql.AppendLine(GetPrimaryKeyWhereClause(table) + ";");
             returnSql.AppendLine("go");
@@ -79,14 +80,24 @@ namespace SqlTool
         {
             var returnSql = new StringBuilder();
             string procName = table.Schema + ".Insert" + table.Name;
+            Column identityColumn = SqlSchema.GetIdentityColumn(table);
             returnSql.AppendLine(GetDropObjectSQL(procName, "procedure"));
             returnSql.AppendLine("create procedure " + procName + "(");
+            if (identityColumn.Name != null)
+            {
+                returnSql.AppendLine("@" + identityColumn.Name + " " + SqlSchema.GetSqlDataType(identityColumn) + " output");
+            }
             returnSql.AppendLine(GetColumnParameterString(table, true, false));
             returnSql.AppendLine(")");
             returnSql.AppendLine("as");
             returnSql.Append("insert into " + table.Schema + "." + table.Name + "(");
             returnSql.AppendLine(SqlSchema.GetColumnListString(table, false) + ")");
             returnSql.AppendLine("values(" + GetColumnParameterString(table, false, false) + ");");
+            if (identityColumn.Name != null)
+            {
+                returnSql.AppendLine("set @" + identityColumn.Name + " = Scope_Identity();");
+            }
+            returnSql.AppendLine();
             returnSql.AppendLine("go");
             return returnSql.ToString();
         }
@@ -195,7 +206,48 @@ namespace SqlTool
             }
             return returnString;
         }
-        
+
+        private static string GetSelectProcParameters(
+            Table table
+        )
+        {
+            string columnList = "";
+            foreach (Column column in table.Columns)
+            {
+                if (columnList.Length > 0)
+                {
+                    columnList += ", " + Environment.NewLine;
+                }
+                columnList += "@" + column.Name + " " + SqlSchema.GetSqlDataType(column);
+                if (!column.InPrimaryKey)
+                {
+                    columnList += " output";
+                }
+            }
+
+            return columnList;
+        }
+
+        private static string GetNonPrimaryKeyOuputParameters(
+            Table table
+        )
+        {
+            string columnList = "";
+            foreach (Column column in table.Columns)
+            {
+                if (!column.InPrimaryKey)
+                {
+                    if (columnList.Length > 0)
+                    {
+                        columnList += ", " + Environment.NewLine;
+                    }
+                    columnList += "@" + column.Name + " = " + column.Name;
+                }
+            }
+
+            return columnList;
+        }
+
         private static string GetColumnParameterString(
             Table table,
             bool includeDataType,

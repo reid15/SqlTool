@@ -13,7 +13,8 @@ namespace SqlTool
         ScriptTable,
         ScriptDataAndTable,
         DataDictionary,
-        ExportDatabase
+        ExportDatabase,
+        DataLayer
     }
 
     public class JobTypeEntry
@@ -55,6 +56,8 @@ namespace SqlTool
             returnList.Add(new JobTypeEntry(JobTypeEnum.ScriptDataAndTable, "Script Data And Table", true, "SQL Script | *.sql", "TableAndDataScript"));
             returnList.Add(new JobTypeEntry(JobTypeEnum.DataDictionary, "Data Dictionary", true, "HTML|*.html", "DataDictionary"));
             returnList.Add(new JobTypeEntry(JobTypeEnum.ExportDatabase, "ExportDatabase", false, "", ""));
+            returnList.Add(new JobTypeEntry(JobTypeEnum.DataLayer, "Data Layer", true, "C#|*.cs", "DataLayer"));
+
             return returnList;
         }
  
