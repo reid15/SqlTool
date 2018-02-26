@@ -59,3 +59,5 @@ obj/Debug/SqlTool.SqlToolForm.resources
 obj/Debug/SqlTool.exe
 bin/Debug/SqlTool.exe.config
 obj/Debug/SqlTool.Properties.Resources.resources
+*.lock
+.vs/SqlTool/v15/Server/sqlite3/storage.ide
