@@ -14,7 +14,8 @@ namespace SqlTool
         ScriptDataAndTable,
         DataDictionary,
         ExportDatabase,
-        DataLayer
+        DataLayer,
+        MergeProc
     }
 
     public class JobTypeEntry
@@ -57,6 +58,7 @@ namespace SqlTool
             returnList.Add(new JobTypeEntry(JobTypeEnum.DataDictionary, "Data Dictionary", true, "HTML|*.html", "DataDictionary"));
             returnList.Add(new JobTypeEntry(JobTypeEnum.ExportDatabase, "ExportDatabase", false, "", ""));
             returnList.Add(new JobTypeEntry(JobTypeEnum.DataLayer, "Data Layer", true, "C#|*.cs", "DataLayer"));
+            returnList.Add(new JobTypeEntry(JobTypeEnum.MergeProc, "Merge Proc", true, "SQL Script | *.sql", "MergeProc"));
 
             return returnList;
         }

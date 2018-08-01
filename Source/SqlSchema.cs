@@ -106,7 +106,8 @@ namespace SqlTool
 
         public static string GetColumnListString(
             Table table,
-            bool includeIdentityColumn
+            bool includeIdentityColumn,
+            string columnPrefix = ""
         )
         {
             string columnList = "";
@@ -117,6 +118,10 @@ namespace SqlTool
                     if (columnList.Length > 0)
                     {
                         columnList += ", ";
+                    }
+                    if (columnPrefix.Length > 0)
+                    {
+                        columnList += columnPrefix + ".";
                     }
                     columnList += column.Name;
                 }

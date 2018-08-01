@@ -97,6 +97,9 @@ namespace SqlTool
                         var generateDataLayer = new GenerateDataLayer();
                         txtResults.Text = generateDataLayer.GetDataLayer(txtServer.Text, txtDatabase.Text, tableInfo.SchemaName, tableInfo.TableName);
                         break;
+                    case JobTypeEnum.MergeProc:
+                        txtResults.Text = CodeGeneration .GetMergeProc(txtServer.Text, txtDatabase.Text, tableInfo);
+                        break;
                     default:
                         break;
                 }

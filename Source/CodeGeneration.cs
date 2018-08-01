@@ -34,16 +34,16 @@ namespace SqlTool
         {
             var returnSql = new StringBuilder();
             string procName = table.Schema + ".Get" + table.Name;
-            returnSql.AppendLine(GetDropObjectSQL(procName, "procedure"));
-            returnSql.AppendLine("create procedure " + procName + "(");
+            returnSql.AppendLine(GetDropObjectSQL(procName, "PROCEDURE"));
+            returnSql.AppendLine("CREATE PROCEDURE " + procName + "(");
             returnSql.AppendLine(GetSelectProcParameters(table));
             returnSql.AppendLine(")");
-            returnSql.AppendLine("as");
-            returnSql.AppendLine("select");
-            returnSql.AppendLine(GetNonPrimaryKeyOuputParameters(table));
-            returnSql.AppendLine("from " + table.Schema + "." + table.Name);
+            returnSql.AppendLine("AS");
+            returnSql.AppendLine("SELECT");
+            returnSql.AppendLine(GetNonPrimaryKeyOutputParameters(table));
+            returnSql.AppendLine("FROM " + table.Schema + "." + table.Name);
             returnSql.AppendLine(GetPrimaryKeyWhereClause(table) + ";");
-            returnSql.AppendLine("go");
+            returnSql.AppendLine("GO");
             return returnSql.ToString();
         }
 
@@ -62,15 +62,15 @@ namespace SqlTool
             }
             var returnSql = new StringBuilder();
             string procName = table.Schema + ".Delete" + table.Name;
-            returnSql.AppendLine(GetDropObjectSQL(procName, "procedure"));
-            returnSql.AppendLine("create procedure " + procName + "(");
+            returnSql.AppendLine(GetDropObjectSQL(procName, "PROCEDURE"));
+            returnSql.AppendLine("CREATE PROCEDURE " + procName + "(");
             returnSql.AppendLine(GetPrimaryKeyInputParameters(table));
             returnSql.AppendLine(")");
-            returnSql.AppendLine("as");
-            returnSql.AppendLine("delete");
-            returnSql.AppendLine("from " + table.Schema + "." + table.Name);
+            returnSql.AppendLine("AS");
+            returnSql.AppendLine("DELETE");
+            returnSql.AppendLine("FROM " + table.Schema + "." + table.Name);
             returnSql.AppendLine(GetPrimaryKeyWhereClause(table) + ";");
-            returnSql.AppendLine("go");
+            returnSql.AppendLine("GO");
             return returnSql.ToString();
         }
 
@@ -81,24 +81,24 @@ namespace SqlTool
             var returnSql = new StringBuilder();
             string procName = table.Schema + ".Insert" + table.Name;
             Column identityColumn = SqlSchema.GetIdentityColumn(table);
-            returnSql.AppendLine(GetDropObjectSQL(procName, "procedure"));
-            returnSql.AppendLine("create procedure " + procName + "(");
+            returnSql.AppendLine(GetDropObjectSQL(procName, "PROCEDURE"));
+            returnSql.AppendLine("CREATE PROCEDURE " + procName + "(");
             if (identityColumn.Name != null)
             {
                 returnSql.AppendLine("@" + identityColumn.Name + " " + SqlSchema.GetSqlDataType(identityColumn) + " output");
             }
             returnSql.AppendLine(GetColumnParameterString(table, true, false));
             returnSql.AppendLine(")");
-            returnSql.AppendLine("as");
-            returnSql.Append("insert into " + table.Schema + "." + table.Name + "(");
+            returnSql.AppendLine("AS");
+            returnSql.Append("INSERT INTO " + table.Schema + "." + table.Name + "(");
             returnSql.AppendLine(SqlSchema.GetColumnListString(table, false) + ")");
-            returnSql.AppendLine("values(" + GetColumnParameterString(table, false, false) + ");");
+            returnSql.AppendLine("VALUES(" + GetColumnParameterString(table, false, false) + ");");
             if (identityColumn.Name != null)
             {
-                returnSql.AppendLine("set @" + identityColumn.Name + " = Scope_Identity();");
+                returnSql.AppendLine("SET @" + identityColumn.Name + " = Scope_Identity();");
             }
             returnSql.AppendLine();
-            returnSql.AppendLine("go");
+            returnSql.AppendLine("GO");
             return returnSql.ToString();
         }
 
@@ -108,13 +108,21 @@ namespace SqlTool
         {
             var returnSql = new StringBuilder();
             string procName = table.Schema + ".Update" + table.Name;
-            returnSql.AppendLine(GetDropObjectSQL(procName, "procedure"));
-            returnSql.AppendLine("create procedure " + procName + "(");
+            returnSql.AppendLine(GetDropObjectSQL(procName, "PROCEDURE"));
+            returnSql.AppendLine("CREATE PROCEDURE " + procName + "(");
             returnSql.AppendLine(GetColumnParameterString(table, true, true));
             returnSql.AppendLine(")");
-            returnSql.AppendLine("as");
-            returnSql.AppendLine("update " + table.Schema + "." + table.Name);
-            returnSql.AppendLine("set ");
+            returnSql.AppendLine("AS");
+            returnSql.AppendLine("UPDATE " + table.Schema + "." + table.Name);
+            returnSql.AppendLine("SET ");
+            returnSql.AppendLine(GetUpdateWithParameter(table));
+            returnSql.AppendLine(GetPrimaryKeyWhereClause(table) + ";");
+            returnSql.AppendLine("GO");
+            return returnSql.ToString();
+        }
+
+        private static string GetUpdateWithParameter(Table table)
+        {
             string columnList = "";
             foreach (Column column in table.Columns)
             {
@@ -127,10 +135,7 @@ namespace SqlTool
                     columnList += column.Name + " = @" + column.Name;
                 }
             }
-            returnSql.AppendLine(columnList);
-            returnSql.AppendLine(GetPrimaryKeyWhereClause(table) + ";");
-            returnSql.AppendLine("go");
-            return returnSql.ToString();
+            return columnList;
         }
 
         private static string GetDropObjectSQL(
@@ -138,9 +143,9 @@ namespace SqlTool
             string objectType
         )
         {
-            var returnSql = "if(object_id('" + objectName + "') is not null)" + Environment.NewLine;
-            returnSql += "\tdrop " + objectType + " " + objectName + ";" + Environment.NewLine;
-            returnSql += "go";
+            var returnSql = "IF(OBJECT_ID('" + objectName + "') IS NOT NULL)" + Environment.NewLine;
+            returnSql += "\tDROP " + objectType + " " + objectName + ";" + Environment.NewLine;
+            returnSql += "GO";
             return returnSql;
         }
 
@@ -165,15 +170,15 @@ namespace SqlTool
         {
             string returnString = "";
             List<Column> pkColumns = GetPrimaryKeyColumns(table);
-            foreach(Column column in pkColumns)
+            foreach (Column column in pkColumns)
             {
                 if (returnString.Length > 0)
                 {
-                    returnString += Environment.NewLine + " and ";
+                    returnString += Environment.NewLine + " AND ";
                 }
                 returnString += column.Name + " = @" + column.Name;
             }
-            return "where " + returnString;
+            return "WHERE " + returnString;
         }
 
         private static bool HasPrimaryKey(
@@ -202,7 +207,7 @@ namespace SqlTool
                 {
                     returnString += ", " + Environment.NewLine;
                 }
-                returnString += "@" + column.Name + " "  + SqlSchema.GetSqlDataType(column);
+                returnString += "@" + column.Name + " " + SqlSchema.GetSqlDataType(column);
             }
             return returnString;
         }
@@ -228,7 +233,7 @@ namespace SqlTool
             return columnList;
         }
 
-        private static string GetNonPrimaryKeyOuputParameters(
+        private static string GetNonPrimaryKeyOutputParameters(
             Table table
         )
         {
@@ -273,5 +278,105 @@ namespace SqlTool
             return returnString;
         }
 
+        public static string GetMergeProc(
+            string serverName,
+            string databaseName,
+            TableInfo tableInfo
+        )
+        {
+            string sourceAlias = "Source";
+            string targetAlias = "Target";
+            Table table = SqlSchema.GetTable(serverName, databaseName, tableInfo.SchemaName, tableInfo.TableName);
+            if (!HasPrimaryKey(table))
+            {
+                throw new ApplicationException("Table does not have a primary key");
+            }
+            string procName = tableInfo.SchemaName + ".Merge" + tableInfo.TableName;
+            var returnSql = new StringBuilder();
+            returnSql.AppendLine(GetDropObjectSQL(procName, "PROCEDURE"));
+            returnSql.AppendLine("CREATE PROCEDURE " + procName);
+            returnSql.AppendLine(GetColumnParameterString(table, true, true));
+            returnSql.AppendLine("AS");
+            returnSql.AppendLine("MERGE " + tableInfo.SchemaName + "." + tableInfo.TableName + " AS " + targetAlias);
+            returnSql.AppendLine("USING (SELECT");
+            returnSql.AppendLine(GetSelectColumnParameters(table));
+            returnSql.AppendLine(") AS " + sourceAlias);
+            returnSql.AppendLine("ON");
+            returnSql.AppendLine(GetJoinForPrimaryKey(table, sourceAlias, targetAlias));
+            returnSql.AppendLine(GetMergeUpdateSQL(table, sourceAlias, targetAlias).TrimEnd());
+            returnSql.AppendLine("WHEN NOT MATCHED THEN INSERT (");
+            returnSql.AppendLine(SqlSchema.GetColumnListString(table, false));
+            returnSql.AppendLine(") VALUES (");
+            returnSql.AppendLine(SqlSchema.GetColumnListString(table, false, sourceAlias));
+            returnSql.AppendLine(");");
+
+            return returnSql.ToString();
+        }
+
+        private static string GetSelectColumnParameters(Table table)
+        {
+            string columnList = "";
+            foreach (Column column in table.Columns)
+            {
+                if (columnList.Length > 0)
+                {
+                    columnList += ", " + Environment.NewLine;
+                }
+                columnList += "@" + column.Name + " AS " + column.Name;
+            }
+
+            return columnList;
+        }
+
+        private static string GetJoinForPrimaryKey(
+            Table table,
+            string sourceTableName,
+            string targetTableName
+        )
+        {
+            string returnString = "";
+            var pk = GetPrimaryKeyColumns(table);
+            foreach(var item in pk)
+            {
+                if (returnString.Length > 0)
+                {
+                    returnString += " AND " + Environment.NewLine;
+                }
+                returnString += targetTableName + "." + item + " = " + sourceTableName + "." + item;
+            }
+
+            return returnString;
+        }
+        
+        private static string GetMergeUpdateSQL(
+            Table table,
+            string sourceAlias,
+            string targetAlias
+        )
+        {
+            string compareList = "";
+            string columnSetList = "";
+            foreach (Column column in table.Columns)
+            {
+                if (!column.InPrimaryKey)
+                {
+                    if (columnSetList.Length > 0)
+                    {
+                        columnSetList += ", " + Environment.NewLine;
+                        compareList += " OR " + Environment.NewLine;
+                    }
+                    compareList += "ISNULL(" + targetAlias + "." + column.Name + ",'') <> ISNULL(" + sourceAlias + "." + column.Name + ", '')";
+                    columnSetList += column.Name + " = " + sourceAlias + "." + column.Name;
+                }
+            }
+
+            var returnSql = new StringBuilder();
+            returnSql.AppendLine("WHEN MATCHED AND (");
+            returnSql.AppendLine(compareList);
+            returnSql.AppendLine(") THEN UPDATE SET");
+            returnSql.AppendLine(columnSetList);
+
+            return returnSql.ToString();
+        }
     }
 }
