@@ -18,8 +18,8 @@ namespace SqlTool
             string tableName
         )
         {
-            var database = SqlSchema.GetDatabase(serverName, databaseName);
-            var table = SqlSchema.GetTable(database, schemaName, tableName);
+            var database = DatabaseCommon.DatabaseSchema.GetDatabase(serverName, databaseName);
+            var table = DatabaseCommon.DatabaseSchema.GetTable(database, schemaName, tableName);
             SetPropertyNullability(table);
 
             var returnCode = new StringBuilder();

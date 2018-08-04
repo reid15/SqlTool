@@ -15,7 +15,7 @@ namespace SqlTool
             TableInfo tableInfo
         )
         {
-            Table table = SqlSchema.GetTable(serverName, databaseName, tableInfo.SchemaName, tableInfo.TableName);
+            Table table = DatabaseCommon.DatabaseSchema.GetTable(serverName, databaseName, tableInfo.SchemaName, tableInfo.TableName);
             if (!HasPrimaryKey(table))
             {
                 throw new ApplicationException("Table does not have a primary key");
@@ -85,7 +85,7 @@ namespace SqlTool
             returnSql.AppendLine("CREATE PROCEDURE " + procName + "(");
             if (identityColumn.Name != null)
             {
-                returnSql.AppendLine("@" + identityColumn.Name + " " + SqlSchema.GetSqlDataType(identityColumn) + " output");
+                returnSql.AppendLine("@" + identityColumn.Name + " " + DatabaseCommon.DatabaseSchema.GetColumnDataType(identityColumn) + " output");
             }
             returnSql.AppendLine(GetColumnParameterString(table, true, false));
             returnSql.AppendLine(")");
@@ -207,7 +207,7 @@ namespace SqlTool
                 {
                     returnString += ", " + Environment.NewLine;
                 }
-                returnString += "@" + column.Name + " " + SqlSchema.GetSqlDataType(column);
+                returnString += "@" + column.Name + " " + DatabaseCommon.DatabaseSchema.GetColumnDataType(column);
             }
             return returnString;
         }
@@ -223,7 +223,7 @@ namespace SqlTool
                 {
                     columnList += ", " + Environment.NewLine;
                 }
-                columnList += "@" + column.Name + " " + SqlSchema.GetSqlDataType(column);
+                columnList += "@" + column.Name + " " + DatabaseCommon.DatabaseSchema.GetColumnDataType(column);
                 if (!column.InPrimaryKey)
                 {
                     columnList += " output";
@@ -271,7 +271,7 @@ namespace SqlTool
                     returnString += "@" + column.Name;
                     if (includeDataType)
                     {
-                        returnString += " " + SqlSchema.GetSqlDataType(column);
+                        returnString += " " + DatabaseCommon.DatabaseSchema.GetColumnDataType(column);
                     }
                 }
             }
@@ -286,7 +286,7 @@ namespace SqlTool
         {
             string sourceAlias = "Source";
             string targetAlias = "Target";
-            Table table = SqlSchema.GetTable(serverName, databaseName, tableInfo.SchemaName, tableInfo.TableName);
+            Table table = DatabaseCommon.DatabaseSchema.GetTable(serverName, databaseName, tableInfo.SchemaName, tableInfo.TableName);
             if (!HasPrimaryKey(table))
             {
                 throw new ApplicationException("Table does not have a primary key");
@@ -365,7 +365,9 @@ namespace SqlTool
                         columnSetList += ", " + Environment.NewLine;
                         compareList += " OR " + Environment.NewLine;
                     }
-                    compareList += "ISNULL(" + targetAlias + "." + column.Name + ",'') <> ISNULL(" + sourceAlias + "." + column.Name + ", '')";
+                    var defaultValue = GetDefaultForDataType(column);
+
+                    compareList += "ISNULL(" + targetAlias + "." + column.Name + "," + defaultValue + ") <> ISNULL(" + sourceAlias + "." + column.Name + ", " + defaultValue + ")";
                     columnSetList += column.Name + " = " + sourceAlias + "." + column.Name;
                 }
             }
@@ -377,6 +379,23 @@ namespace SqlTool
             returnSql.AppendLine(columnSetList);
 
             return returnSql.ToString();
+        }
+
+        private static string GetDefaultForDataType(Column column)
+        {
+            if(DatabaseCommon.DatabaseSchema.IsNumericDataType(column))
+            {
+                return "-1";
+            }
+            switch(column.DataType.Name)
+            {
+                case "date":
+                case "datetime":
+                    return "'2000-01-01'";
+                case "bit":
+                    return "-1";
+            }
+            return "''";
         }
     }
 }

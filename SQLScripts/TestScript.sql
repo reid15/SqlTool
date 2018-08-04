@@ -1,4 +1,6 @@
 
+-- Create a table and add data to test SqlTool
+
 drop table if exists dbo.TestTable;
 
 create table dbo.TestTable(
@@ -26,6 +28,17 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Name to displa
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Records should appear in sequential order' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'TestTable', @level2type=N'COLUMN',@level2name=N'SortOrder'
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Cost of the item' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'TestTable', @level2type=N'COLUMN',@level2name=N'Price'
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Table for testing' , @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'TestTable'
+
+drop table if exists dbo.TestTable2;
+
+create table dbo.TestTable2(
+RecordId int not null primary key,
+UpdatedAt datetime not null,
+DisplayName varchar(50) not null,
+SortOrder tinyint not null,
+Price decimal(6,2) not null
+);
+
 GO
 
 

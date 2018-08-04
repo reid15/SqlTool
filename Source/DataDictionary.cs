@@ -14,7 +14,7 @@ namespace SqlTool
             string databaseName
         )
         {
-            var database = SqlSchema.GetDatabase(serverName, databaseName);
+            var database = DatabaseCommon.DatabaseSchema.GetDatabase(serverName, databaseName);
             var returnString = new StringBuilder();
             returnString.AppendLine("<html>");
             returnString.AppendLine("<head>");
@@ -52,7 +52,7 @@ namespace SqlTool
                 {
                     bodyString.AppendLine("<TR>");
                     bodyString.AppendLine("<TD>" + column.Name + "</TD>");
-                    bodyString.AppendLine("<TD>" + SqlSchema.GetSqlDataType(column) + "</TD>");
+                    bodyString.AppendLine("<TD>" + DatabaseCommon.DatabaseSchema.GetColumnDataType(column) + "</TD>");
                     bodyString.AppendLine("<TD>" + column.Nullable.ToString() + "</TD>");
                     bodyString.AppendLine("<TD>" + column.InPrimaryKey.ToString() + "</TD>");
                     string defaultValue = "";

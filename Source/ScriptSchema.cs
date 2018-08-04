@@ -15,7 +15,7 @@ namespace SqlTool
             string tableName
         )
         {
-            var database = SqlSchema.GetDatabase(serverName, databaseName);
+            var database = DatabaseCommon.DatabaseSchema.GetDatabase(serverName, databaseName);
             return GetTableScript(database, schemaName, tableName);
         }
 
@@ -28,7 +28,7 @@ namespace SqlTool
             var options = new ScriptingOptions();
             options.DriAll = true;
             options.NoFileGroup = true;
-            var table = SqlSchema.GetTable(database, schemaName, tableName);
+            var table = DatabaseCommon.DatabaseSchema.GetTable(database, schemaName, tableName);
             var scriptCollection = table.Script(options);
             var returnSQL = new StringBuilder();
             foreach (var item in scriptCollection)
@@ -50,7 +50,7 @@ namespace SqlTool
             }
             Directory.CreateDirectory(directoryName);
 
-            var database = SqlSchema.GetDatabase(serverName, databaseName);
+            var database = DatabaseCommon.DatabaseSchema.GetDatabase(serverName, databaseName);
             var options = GetScriptingOptions();
 
             ScriptObjectType(directoryName, "Schemas", database.Schemas.Cast<Schema>().ToList(), options);

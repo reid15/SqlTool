@@ -7,6 +7,7 @@ Requirements:
 The program requires the .Net Framework 4.0 or later. 
 Windows authentication is used. The user must have permission to view the database objects and data that will be compared.
 No SQL Server edition specific features are used. All functions were tested using SQL Server 2017.
+The source code references the project in the DatabaseCommon repository.
 
 Repository Contents:
 	Bin: The compiled program
