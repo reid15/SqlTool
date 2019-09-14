@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.SqlServer.Management.Smo;
+﻿using Microsoft.SqlServer.Management.Smo;
 using System.Collections.Generic;
 
 namespace SqlTool

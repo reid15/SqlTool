@@ -1,9 +1,7 @@
 ﻿using System;
 using Microsoft.SqlServer.Management.Smo;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SqlTool
 {
