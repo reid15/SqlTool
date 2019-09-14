@@ -27,14 +27,14 @@ namespace SqlTool
             var table = DatabaseCommon.DatabaseSchema.GetTable(serverName, databaseName, tableInfo.SchemaName, tableInfo.TableName);
             string columnList = SqlSchema.GetColumnListString(table, true);
             var columns = SqlSchema.GetColumnList(table);
-            string insertLine = "insert into " + fullTableName + "(";
+            string insertLine = "INSERT INTO " + fullTableName + "(";
             insertLine += columnList + ")" + Environment.NewLine;
-            insertLine += "values({0});";
+            insertLine += "VALUES({0});";
             var returnSql = new StringBuilder();
             bool hasIdentity = DatabaseCommon.DatabaseSchema.HasIdentityColumn(table);
             if (hasIdentity)
             {
-                returnSql.AppendLine("set identity_insert " + fullTableName + " on; ");
+                returnSql.AppendLine("SET IDENTITY_INSERT " + fullTableName + " ON; ");
                 returnSql.AppendLine();
             }
             foreach(DataRow row in dt.Rows)
@@ -45,7 +45,7 @@ namespace SqlTool
             }
             if (hasIdentity)
             {
-                returnSql.AppendLine("set identity_insert " + fullTableName + " off;");
+                returnSql.AppendLine("SET IDENTITY_INSERT " + fullTableName + " OFF;");
             }
             return returnSql.ToString();
         }
